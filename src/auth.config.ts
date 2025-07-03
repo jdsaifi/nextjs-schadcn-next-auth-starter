@@ -24,13 +24,19 @@ export const authConfig = {
         },
         authorized({ auth, request: { nextUrl } }) {
             const isLoggedIn = !!auth?.user;
-            const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
-            if (isOnDashboard) {
-                if (isLoggedIn) return true;
-                return false; // Redirect unauthenticated users to login page
-            } else if (isLoggedIn) {
+            const isLoginPage = nextUrl.pathname === '/login';
+
+            // 1. Not logged in → redirect to /login (unless already on /login)
+            if (!isLoggedIn && !isLoginPage) {
+                return Response.redirect(new URL('/login', nextUrl));
+            }
+
+            // 2. Logged in and trying to visit /login → redirect to /dashboard
+            if (isLoggedIn && isLoginPage) {
                 return Response.redirect(new URL('/dashboard', nextUrl));
             }
+
+            // 3. All other cases: allow
             return true;
         },
     },
